@@ -5,12 +5,12 @@ app.use('/', express.static(__dirname + '/public')); // ← adjust
 app.listen(8080);
 
 MissionIntelApp = {};
-require('./public/js/comm.js');
-require('./public/js/marker.js');
-require('./public/js/marker-fids.js');
+require('./js/comm.js');
+require('./js/marker.js');
+require('./js/marker-fids.js');
 
-var Utility = require('./public/js/utility.js');
-var SIDCtable = require('./public/js/sidc.js');
+var Utility = require('./js/utility.js');
+var SIDCtable = require('./js/sidc.js');
 
 var GeoJSON = require('geojson');
 
@@ -158,5 +158,5 @@ function receiveDCSData(dcsData) {
 }
 
 server.listen(8081);
-var dcsdr = require('./server/dcsdataretriever.js');
+var dcsdr = require('./js/data-retriever.js');
 dcsdr(receiveDCSData);

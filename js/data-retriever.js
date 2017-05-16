@@ -1,4 +1,4 @@
-module.exports = function DCSDataRetriever(dataCallback) {
+module.exports = function DataRetriever(dataCallback) {
 
     const PORT = 3001;
     const ADDRESS = "127.0.0.1";
