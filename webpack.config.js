@@ -16,13 +16,26 @@ fs
 
 module.exports = {
   entry: "./dev/notius-server.js",
+
   target: "node",
+
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "notius-server.min.js",
     sourceMapFilename: "notius-server.map"
   },
+
   externals: nodeModules,
+
+  module: {
+    loaders: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        loader: "babel-loader"
+      }
+    ]
+  },
 
   plugins: [
     new webpack.LoaderOptionsPlugin({
@@ -41,5 +54,7 @@ module.exports = {
       comments: false
     })
   ],
-  devtool: 'sourcemap'
+  stats: {
+    colors: true
+  }
 };
