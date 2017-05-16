@@ -1,3 +1,3 @@
 module.exports = {
-  entry: './path/to/my/entry/file.js'
+  entry: './dev/server.js'
 };
