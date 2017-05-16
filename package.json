@@ -8,6 +8,7 @@
     "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
     "express": "^4.15.2",
+    "fs": "0.0.1-security",
     "geojson": "^0.4.1",
     "nodejs-websocket": "^1.7.1",
     "path": "^0.12.7",
@@ -17,9 +18,8 @@
     "webpack": "^2.5.1"
   },
   "scripts": {
-    "dev": "webpack --config webpack.config.js",
-    "bundle": "webpack -p",
-    "build:dev": "webpack --env=dev --progress --profile --colors",
-    "build:dist": "webpack --env=prod --progress --profile --colors"
+    "build": "webpack -p --watch --progress --profile --colors",
+    "dev": "node ./dev/notius-server.js",
+    "dist": "node ./dist/notius-server.min.js"
   }
 }
