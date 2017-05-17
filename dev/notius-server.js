@@ -1,7 +1,6 @@
 ﻿var express = require("express");
 var app = express();
 app.use("/", express.static(__dirname + "/public")); // ← adjust
-//app.listen(8080);
 app.listen(8080);
 
 MissionIntelApp = {};
@@ -168,5 +167,5 @@ function receiveDCSData(dcsData) {
 }
 
 server.listen(8081);
-var dcsdr = require("./js/data-retriever.js");
-dcsdr(receiveDCSData);
+var dataRetriever = require("./js/data-retriever.js");
+dataRetriever(receiveDCSData);

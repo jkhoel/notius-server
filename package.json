@@ -1,24 +1,35 @@
 {
   "name": "notius-server",
-  "version": "0.1.0",
-  "homepage": "https://github.com/jkhoel/notius-server",
-  "description": "Node.js server for interfacing between DCS:WORLD and Notius-UI",
-  "private": true,
+  "version": "0.0.1",
+  "description": "a Node.js server for DCS:WORLD and Notius-MMS",
+  "main": "webpack.config.js",
   "dependencies": {
-    "babel-core": "^6.24.1",
-    "babel-loader": "^7.0.0",
-    "babel-preset-env": "^1.4.0",
     "express": "^4.15.2",
-    "fs": "0.0.1-security",
+    "fs": "^0.0.1-security",
     "geojson": "^0.4.1",
     "nodejs-websocket": "^1.7.1",
     "path": "^0.12.7",
+    "babel-loader": "^7.0.0",
+    "babel-core": "^6.24.1",
+    "babel-preset-env": "^1.4.0",
     "webpack": "^2.5.1"
   },
+  "devDependencies": {},
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "babel": "babel --presets es2015 js/main.js -o build/main.bundle.js",
     "build": "webpack -p --watch --progress --profile --colors",
     "dev": "node ./dev/notius-server.js",
     "dist": "node ./dist/notius-server.min.js"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jkhoel/notius-server.git"
+  },
+  "author": "Jens Kristian Hoel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jkhoel/notius-server/issues"
+  },
+  "homepage": "https://github.com/jkhoel/notius-server"
 }
