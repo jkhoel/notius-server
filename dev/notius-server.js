@@ -25,13 +25,12 @@ const server = websocket.createServer(conn => {
   });
 });
 
-
 /*
   Transmits data to all connected clients
 */
 function ParseAndTransmit(data) {
   console.log(data)
-  // let geoJSONData = toGeoJSON(dcsData);
+  // let geoJSONData = toGeoJSON(dcsData);      // NEED TO RECREATE THIS FUNCTION
   let geoJSONData = data;
    for (let connection in wsConnections)
      wsConnections[connection].sendText(JSON.stringify(geoJSONData));
