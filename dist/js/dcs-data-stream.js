@@ -1,18 +1,13 @@
 'use strict';
 
-module.exports = function DCSdataStream(dataCallback, net) {
-
-    var PORT = 3001;
-    var ADDRESS = "127.0.0.1";
-
-    //const net = require('net');
-
-    var buffer = void 0;
-    var i = void 0;
+module.exports = function DCSdataStream(dataCallback, server, net) {
 
     function connect() {
 
-        var client = net.createConnection({ host: ADDRESS, port: PORT }, function () {
+        var buffer = void 0;
+        var i = void 0;
+
+        var client = net.createConnection({ host: server.address, port: server.port }, function () {
             var t = new Date();
             console.log(t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds() + ' :: Connected to DCS server!');
             buffer = "";

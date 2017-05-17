@@ -1,9 +1,5 @@
 "use strict";
 
-var _express = require("express");
-
-var _express2 = _interopRequireDefault(_express);
-
 var _nodejsWebsocket = require("nodejs-websocket");
 
 var _nodejsWebsocket2 = _interopRequireDefault(_nodejsWebsocket);
@@ -22,18 +18,14 @@ var _dcsDataStream2 = _interopRequireDefault(_dcsDataStream);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-/* SETUP #################################################################################### */
-var _port = 3000; // Notius-Server will listen for clients on this port
-var _server = 8081; // Notius-Server will connect to the DCS server on this port
+/* SETUP ################################################################################################################### */
+//import express from "express";
+var _CLIENTS = 8081; // Notius-Server listen for clients on this port
+var _DCS = { port: 3001, address: "127.0.0.1" }; // Notius-Server connects to the DCS Server on this port an address
 
-/* ########################################################################################## */
+/* ######################################################################################################################### */
 
-var app = (0, _express2.default)();
-
-app.listen(_port, function () {
-  console.log("#### NOTIUS-SERVER IS RUNNING (Port " + _port + ") ####");
-});
-
+// WEBSOCKET SETUP
 var wsConnections = [];
 var server = _nodejsWebsocket2.default.createServer(function (conn) {
   var t = new Date();
@@ -41,19 +33,25 @@ var server = _nodejsWebsocket2.default.createServer(function (conn) {
   wsConnections.push(conn);
   conn.on("close", function (code, reason) {
     wsConnections.splice(wsConnections.indexOf(conn), 1);
-
     t = new Date();
-    console.log(t.getHours() + ":" + t.getMinutes() + ":" + t.getSeconds() + " :: -> Client disconnected");
+    console.log(t.getHours(), ":", t.getMinutes(), ":", t.getSeconds(), " :: -> Client disconnected");
   });
 });
 
-// Transmits data to all connected clients
-function transmitData(dcsData) {}
-// let geoJSONData = toGeoJSON(dcsData);
-// for (let connection in wsConnections)
-//   wsConnections[connection].sendText(JSON.stringify(geoJSONData));
+/*
+  Transmits data to all connected clients
+*/
+function ParseAndTransmit(data) {
+  console.log(data);
+  // let geoJSONData = toGeoJSON(dcsData);
+  var geoJSONData = data;
+  for (var connection in wsConnections) {
+    wsConnections[connection].sendText(JSON.stringify(geoJSONData));
+  }
+}
 
-
-// DCSdataStream recieves data from DCS and passes it to the transmitData function that parses it and sends it to the clients
-server.listen(_server);
-(0, _dcsDataStream2.default)(transmitData, _net2.default);
+// DCSdataStream recieves data from DCS and passes it to the ParseAndTransmit function that parses it and sends it to the clients
+server.listen(_CLIENTS, function () {
+  console.log("#### NOTIUS-SERVER IS LISTENING FOR CLIENTS ON PORT " + _CLIENTS + " ####");
+});
+(0, _dcsDataStream2.default)(ParseAndTransmit, _DCS, _net2.default);

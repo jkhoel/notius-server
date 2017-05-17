@@ -1,16 +1,11 @@
-module.exports = function DCSdataStream(dataCallback, net) {
-
-    const PORT = 3001;
-    const ADDRESS = "127.0.0.1";
-
-    //const net = require('net');
-
-    let buffer;
-    let i;
+module.exports = function DCSdataStream(dataCallback, server, net) {
 
     function connect() {
 
-        const client = net.createConnection({host: ADDRESS, port: PORT}, () => {
+        let buffer;
+        let i;
+
+        const client = net.createConnection({host: server.address, port: server.port}, () => {
             let t = new Date();
             console.log(t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds() + ' :: Connected to DCS server!');
             buffer = "";
