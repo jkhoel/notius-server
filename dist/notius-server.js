@@ -45,6 +45,9 @@ var server = _nodejsWebsocket2.default.createServer(function (conn) {
     t = new Date();
     console.log(t.getHours() + ":" + t.getMinutes() + ":" + t.getSeconds() + " :: -> Client disconnected");
   });
+  conn.on("error", function (error) {
+    console.log("::: ERROR: ", error);
+  });
 });
 
 /*

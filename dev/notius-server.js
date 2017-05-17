@@ -38,6 +38,9 @@ const server = websocket.createServer(conn => {
         " :: -> Client disconnected"
     );
   });
+  conn.on("error", function(error) {
+    console.log("::: ERROR: ", error);
+  });
 });
 
 /*

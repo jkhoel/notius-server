@@ -16,7 +16,6 @@
     "rimraf": "^2.6.1",
     "webpack": "^2.5.1"
   },
-  "devDependencies": {},
   "scripts": {
     "pack": "webpack --watch -p --progress --profile --colors",
     "build": "babel ./dev --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",

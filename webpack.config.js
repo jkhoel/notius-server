@@ -14,6 +14,10 @@ fs
     nodeModules[mod] = "commonjs " + mod;
   });
 
+const t = new Date();
+const timestamp = "" + t.getHours() + "" + t.getMinutes() + "" + t.getSeconds();
+const filename = `notius-server.min.${timestamp}.js`;
+
 module.exports = {
   entry: "./dist/notius-server.js",
 
@@ -21,7 +25,7 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "notius-server.min.js",
+    filename: filename,
     sourceMapFilename: "notius-server.map"
   },
 
