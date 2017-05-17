@@ -15,7 +15,7 @@ fs
   });
 
 module.exports = {
-  entry: "./dev/notius-server.js",
+  entry: "./dist/notius-server.js",
 
   target: "node",
 
