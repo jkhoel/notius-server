@@ -4,23 +4,27 @@
   "description": "a Node.js server for DCS:WORLD and Notius-MMS",
   "main": "webpack.config.js",
   "dependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.4.0",
     "express": "^4.15.2",
     "fs": "^0.0.1-security",
     "geojson": "^0.4.1",
+    "morgan": "^1.8.1",
     "nodejs-websocket": "^1.7.1",
     "path": "^0.12.7",
-    "babel-loader": "^7.0.0",
-    "babel-core": "^6.24.1",
-    "babel-preset-env": "^1.4.0",
+    "rimraf": "^2.6.1",
     "webpack": "^2.5.1"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "babel": "babel --presets es2015 js/main.js -o build/main.bundle.js",
-    "build": "webpack -p --watch --progress --profile --colors",
+    "build": "npm run babel && webpack -p --watch --progress --profile --colors",
     "dev": "node ./dev/notius-server.js",
-    "dist": "node ./dist/notius-server.min.js"
+    "dist": "node ./dist/notius-server.min.js",
+    "babel": "rimraf dist/ && babel ./dev --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
+    "start": "npm run build && node .dist/notius-server.min.js"
   },
   "repository": {
     "type": "git",
