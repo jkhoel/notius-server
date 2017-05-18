@@ -93,7 +93,7 @@ const DataParser = data => {
 
   _all.forEach(element => {
     let unit = Unit.parse(element);
-    console.log(unit.type, "(", unit.x, unit.y, ")");
+    //console.log(unit.type, "(", unit.x, unit.y, ") ");
 
     // Add unit to the feature collection
     featureCollection.push({

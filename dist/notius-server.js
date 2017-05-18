@@ -108,7 +108,7 @@ var DataParser = function DataParser(data) {
 
   _all.forEach(function (element) {
     var unit = Unit.parse(element);
-    console.log(unit.type, "(", unit.x, unit.y, ")");
+    //console.log(unit.type, "(", unit.x, unit.y, ") ");
 
     // Add unit to the feature collection
     featureCollection.push({
