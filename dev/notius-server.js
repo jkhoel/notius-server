@@ -90,26 +90,30 @@ class Unit {
 const DataParser = data => {
   let featureCollection = [];
   let _all = data.blue.concat(data.red);
+  let i = 0;
 
   _all.forEach(element => {
     let unit = Unit.parse(element);
-    //console.log(unit.type, "(", unit.x, unit.y, ") ");
 
     // Add unit to the feature collection
-    featureCollection.push({
-      lat: unit.x,
-      lon: unit.y,
-      alt: Utility.metersToFL(unit.z),
-      hdg: unit.hdg,
-      speed: unit.speed,
-      //monoColor: markerColor,
-      //SIDC: _sidc + "***",
-      //side: side,
-      size: 30,
-      source: "awacs",
-      type: unit.type,
-      name: Utility.trackNum(unit.callsign)
-    });
+    featureCollection.push(
+      {
+        lat: unit.x,
+        lon: unit.y,
+        alt: Utility.metersToFL(unit.z),
+        hdg: unit.hdg,
+        speed: unit.speed,
+        //monoColor: markerColor,
+        //SIDC: _sidc + "***",
+        //side: side,
+        size: 30,
+        source: "awacs",
+        type: unit.type,
+        //name: Utility.trackNum(unit.callsign)
+        name: unit.type,
+        SIDC: "SFG-UCI----D"
+      }
+    );
   });
 
   let _json = GeoJSON.parse(featureCollection, { Point: ["lat", "lon"] });

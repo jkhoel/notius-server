@@ -105,10 +105,10 @@ var Unit = function () {
 var DataParser = function DataParser(data) {
   var featureCollection = [];
   var _all = data.blue.concat(data.red);
+  var i = 0;
 
   _all.forEach(function (element) {
     var unit = Unit.parse(element);
-    //console.log(unit.type, "(", unit.x, unit.y, ") ");
 
     // Add unit to the feature collection
     featureCollection.push({
@@ -123,7 +123,9 @@ var DataParser = function DataParser(data) {
       size: 30,
       source: "awacs",
       type: unit.type,
-      name: _utility2.default.trackNum(unit.callsign)
+      //name: Utility.trackNum(unit.callsign)
+      name: unit.type,
+      SIDC: "SFG-UCI----D"
     });
   });
 
