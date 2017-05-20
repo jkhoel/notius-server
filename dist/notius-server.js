@@ -22,6 +22,10 @@ var _utility = require("./js/utility");
 
 var _utility2 = _interopRequireDefault(_utility);
 
+var _sidc2 = require("./js/sidc");
+
+var _sidc3 = _interopRequireDefault(_sidc2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -110,6 +114,35 @@ var DataParser = function DataParser(data) {
   _all.forEach(function (element) {
     var unit = Unit.parse(element);
 
+    // Setup a default marker
+    var _sidcObject = Object.assign({}, _sidc3.default["default"]);
+    var side = "0";
+    var markerColor = "rgb(252, 246, 127)";
+
+    // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
+    if (_sidc3.default[unit.type]) _sidcObject = Object.assign(_sidcObject, _sidc3.default[unit.type]);
+
+    // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
+    if (unit.coalition === 1) {
+      side = "1";
+      markerColor = "rgb(255, 88, 88)";
+      _sidcObject["affiliation"] = "H";
+    }
+    if (unit.coalition === 2) {
+      side = "2";
+      markerColor = "rgb(128, 224, 255)";
+      _sidcObject["affiliation"] = "F";
+    }
+
+    // OPTION: [COMMENT TO TURN OFF] HIDE UNIT TYPE/FUNCTION
+    //_sidcObject["functionID"] = '-----';
+
+    // Generate final SIDC string
+    var _sidc = "";
+    for (var atr in _sidcObject) {
+      _sidc += _sidcObject[atr];
+    }
+
     // Add unit to the feature collection
     featureCollection.push({
       lat: unit.x,
@@ -117,15 +150,14 @@ var DataParser = function DataParser(data) {
       alt: _utility2.default.metersToFL(unit.z),
       hdg: unit.hdg,
       speed: unit.speed,
-      //monoColor: markerColor,
-      //SIDC: _sidc + "***",
-      //side: side,
-      size: 30,
+      monoColor: markerColor,
+      SIDC: _sidc + "***",
+      side: side,
+      size: 25,
       source: "awacs",
       type: unit.type,
       //name: Utility.trackNum(unit.callsign)
-      name: unit.type,
-      SIDC: "SFG-UCI----D"
+      name: unit.type
     });
   });
 

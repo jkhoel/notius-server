@@ -4,6 +4,7 @@ import net from "net";
 
 import DCSdataStream from "./js/dcs-data-stream";
 import Utility from "./js/utility";
+import SIDCtable from "./js/sidc";
 
 /* SETUP ################################################################################################################### */
 const _CLIENTS = 8081; // Notius-Server listen for clients on this port
@@ -95,25 +96,52 @@ const DataParser = data => {
   _all.forEach(element => {
     let unit = Unit.parse(element);
 
+    // Setup a default marker
+    let _sidcObject = Object.assign({}, SIDCtable["default"]);
+    let side = "0";
+    let markerColor = "rgb(252, 246, 127)";
+
+    // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
+    if (SIDCtable[unit.type])
+      _sidcObject = Object.assign(_sidcObject, SIDCtable[unit.type]);
+
+    // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
+    if (unit.coalition === 1) {
+      side = "1";
+      markerColor = "rgb(255, 88, 88)";
+      _sidcObject["affiliation"] = "H";
+    }
+    if (unit.coalition === 2) {
+      side = "2";
+      markerColor = "rgb(128, 224, 255)";
+      _sidcObject["affiliation"] = "F";
+    }
+
+    // OPTION: [COMMENT TO TURN OFF] HIDE UNIT TYPE/FUNCTION
+    //_sidcObject["functionID"] = '-----';
+
+    // Generate final SIDC string
+    let _sidc = "";
+    for (var atr in _sidcObject) {
+      _sidc += _sidcObject[atr];
+    }
+
     // Add unit to the feature collection
-    featureCollection.push(
-      {
-        lat: unit.x,
-        lon: unit.y,
-        alt: Utility.metersToFL(unit.z),
-        hdg: unit.hdg,
-        speed: unit.speed,
-        //monoColor: markerColor,
-        //SIDC: _sidc + "***",
-        //side: side,
-        size: 30,
-        source: "awacs",
-        type: unit.type,
-        //name: Utility.trackNum(unit.callsign)
-        name: unit.type,
-        SIDC: "SFG-UCI----D"
-      }
-    );
+    featureCollection.push({
+      lat: unit.x,
+      lon: unit.y,
+      alt: Utility.metersToFL(unit.z),
+      hdg: unit.hdg,
+      speed: unit.speed,
+      monoColor: markerColor,
+      SIDC: _sidc + "***",
+      side: side,
+      size: 25,
+      source: "awacs",
+      type: unit.type,
+      //name: Utility.trackNum(unit.callsign)
+      name: unit.type
+    });
   });
 
   let _json = GeoJSON.parse(featureCollection, { Point: ["lat", "lon"] });
