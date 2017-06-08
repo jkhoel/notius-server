@@ -82,20 +82,115 @@ class Unit {
     this.coalition = 0;
     this.name = "";
     this.sidc = "";
+    this.observable = false;
+    this.observer = "";
+    this.distance = 0;
   }
 }
+
+/*
+  FUNCTION: CheckObservable() -> Checks if the unit is within the radius of any enemy units. If so, it returns true
+*/
+
+// TODO: If a unit name is prefixed with OBSERVABLE_ then it should be added to the list no matter what
+// TODO: Radius should be based off of the bluefor units sensor range
+// TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
+// TODO: observer should allways be the closest unit
+
+const CheckObservable = (enemy, friendlyUnits, radius) => {
+  let state = {
+    observable: false,
+    observer: "",
+    distance: 0
+  };
+
+  // For each friendlyUnit, check if the enemy unit is within the radius
+  friendlyUnits.forEach(f => {
+    // Based on the latitude of enemy, get the actual distances for 1deg of lat and long
+    let lengths = Utility.calcLatLonDistances(enemy.x);
+
+    // Calculate deltas in meters
+    let dX = (enemy.x - f.lat) * lengths.lat;
+    let dY = (enemy.y - f.lon) * lengths.lon;
+    let dZ = enemy.z - f.alt;
+
+    let distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2));
+
+    //console.log(enemy.type + " :: Distance to " + f.name + " = " + distance + "(radius = " + radius + ")");
+    //console.log("Distance in nm, Latitude (X):", dX / 1852 );
+    //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
+
+    if (distance <= radius) {
+      state.observable = true;
+      state.observer = f.name;
+      state.distance = distance;
+    }
+  });
+
+  return state;
+};
 
 /*
   FUNCTION: DataParser() -> Parse the datastream and return a collection of markers as a geoJSON object
 */
 const DataParser = data => {
   let featureCollection = [];
-  let _all = data.blue.concat(data.red);
   let i = 0;
 
-  _all.forEach(element => {
+  let blueforCollection = [];
+  let redforCollection = [];
+
+  // BLUEFOR Collection
+  data.blue.forEach(element => {
     let unit = Unit.parse(element);
 
+    blueforCollection.push({
+      type: unit.type,
+      lat: unit.x,
+      lon: unit.y,
+      alt: unit.z,
+      hdg: unit.hdg,
+      speed: unit.speed,
+      callsign: unit.callsign,
+      name: unit.name,
+      SIDC: "",
+      monoColor: "",
+      side: unit.coalition,
+      size: 25,
+      observable: true,
+      observer: null,
+      distance: null
+    });
+  });
+  //console.log("BLUEFOR: ", bluefor);
+
+  // REDFOR Collection
+  data.red.forEach(element => {
+    let unit = Unit.parse(element);
+    let check = CheckObservable(unit, blueforCollection, 6000); // radius in meter
+
+    redforCollection.push({
+      type: unit.type,
+      lat: unit.x,
+      lon: unit.y,
+      alt: unit.z,
+      hdg: unit.hdg,
+      speed: unit.speed,
+      callsign: unit.callsign,
+      name: unit.name,
+      SIDC: "",
+      monoColor: "",
+      side: unit.coalition,
+      size: 25,
+      observable: true,
+      observer: check.observer,
+      distance: check.distance,
+    });
+  });
+  //console.log("REDFOR: ", redforCollection);
+
+  let _all = blueforCollection.concat(redforCollection);
+   _all.forEach(unit => {
     // Setup a default marker
     let _sidcObject = Object.assign({}, SIDCtable["default"]);
     let side = "0";
@@ -106,12 +201,13 @@ const DataParser = data => {
       _sidcObject = Object.assign(_sidcObject, SIDCtable[unit.type]);
 
     // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
-    if (unit.coalition === 1) {
+    if (unit.side === 1) {
       side = "1";
       markerColor = "rgb(255, 88, 88)";
       _sidcObject["affiliation"] = "H";
     }
-    if (unit.coalition === 2) {
+
+    if (unit.side === 2) {
       side = "2";
       markerColor = "rgb(128, 224, 255)";
       _sidcObject["affiliation"] = "F";
@@ -126,21 +222,22 @@ const DataParser = data => {
       _sidc += _sidcObject[atr];
     }
 
-    // Add unit to the feature collection
+   // Add unit to the feature collection
     featureCollection.push({
-      lat: unit.x,
-      lon: unit.y,
+      type: unit.type,
+      lat: unit.lat,
+      lon: unit.lon,
       alt: Utility.metersToFL(unit.z),
       hdg: unit.hdg,
       speed: unit.speed,
-      monoColor: markerColor,
+      callsign: unit.callsign,
+      name: unit.name,
       SIDC: _sidc + "***",
+      monoColor: markerColor,
       side: side,
       size: 25,
-      source: "awacs",
-      type: unit.type,
-      //name: Utility.trackNum(unit.callsign)
-      name: unit.type
+      observer: unit.observer,
+      distance: unit.distance,
     });
   });
 
