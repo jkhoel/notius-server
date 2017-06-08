@@ -132,7 +132,7 @@ var CheckObservable = function CheckObservable(enemy, friendlyUnits, radius) {
 
     var distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2));
 
-    //console.log(enemy.type + " :: Distance to " + f.name + " = " + distance + "(radius = " + radius + ")");
+    console.log(enemy.type + " :: Distance to " + f.type + " = " + distance + "(radius = " + radius + ")");
     //console.log("Distance in nm, Latitude (X):", dX / 1852 );
     //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
 
@@ -185,23 +185,28 @@ var DataParser = function DataParser(data) {
     var unit = Unit.parse(element);
     var check = CheckObservable(unit, blueforCollection, 6000); // radius in meter
 
-    redforCollection.push({
-      type: unit.type,
-      lat: unit.x,
-      lon: unit.y,
-      alt: unit.z,
-      hdg: unit.hdg,
-      speed: unit.speed,
-      callsign: unit.callsign,
-      name: unit.name,
-      SIDC: "",
-      monoColor: "",
-      side: unit.coalition,
-      size: 25,
-      observable: true,
-      observer: check.observer,
-      distance: check.distance
-    });
+    console.log(unit.type, " => ", check.observable);
+
+    // Add REDFOR unit to the collection if it is observable
+    if (check.observable === true) {
+      redforCollection.push({
+        type: unit.type,
+        lat: unit.x,
+        lon: unit.y,
+        alt: unit.z,
+        hdg: unit.hdg,
+        speed: unit.speed,
+        callsign: unit.callsign,
+        name: unit.name,
+        SIDC: "",
+        monoColor: "",
+        side: unit.coalition,
+        size: 25,
+        observable: true,
+        observer: check.observer,
+        distance: check.distance
+      });
+    }
   });
   //console.log("REDFOR: ", redforCollection);
 
@@ -255,56 +260,6 @@ var DataParser = function DataParser(data) {
       distance: unit.distance
     });
   });
-
-  /* OLD FUNCTION */
-  /*
-  let _all = data.blue.concat(data.red);
-  _all.forEach(element => {
-    let unit = Unit.parse(element);
-      // TODO: CHECK IF UNIT IS BLUE OR OBSERVABLE. IF NOT, THEN THE UNIT SHOULD BE SKIPPED.
-      // Setup a default marker
-    let _sidcObject = Object.assign({}, SIDCtable["default"]);
-    let side = "0";
-    let markerColor = "rgb(252, 246, 127)";
-      // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
-    if (SIDCtable[unit.type])
-      _sidcObject = Object.assign(_sidcObject, SIDCtable[unit.type]);
-      // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
-    if (unit.coalition === 1) {
-      side = "1";
-      markerColor = "rgb(255, 88, 88)";
-      _sidcObject["affiliation"] = "H";
-    }
-    if (unit.coalition === 2) {
-      side = "2";
-      markerColor = "rgb(128, 224, 255)";
-      _sidcObject["affiliation"] = "F";
-    }
-      // OPTION: [COMMENT TO TURN OFF] HIDE UNIT TYPE/FUNCTION
-    //_sidcObject["functionID"] = '-----';
-      // Generate final SIDC string
-    let _sidc = "";
-    for (var atr in _sidcObject) {
-      _sidc += _sidcObject[atr];
-    }
-      // Add unit to the feature collection
-    featureCollection.push({
-      lat: unit.x,
-      lon: unit.y,
-      alt: Utility.metersToFL(unit.z),
-      hdg: unit.hdg,
-      speed: unit.speed,
-      monoColor: markerColor,
-      SIDC: _sidc + "***",
-      side: side,
-      size: 25,
-      source: "awacs",
-      type: unit.type,
-      //name: Utility.trackNum(unit.callsign)
-      name: unit.type
-    });
-  });
-  */
 
   var _json = _geojson2.default.parse(featureCollection, { Point: ["lat", "lon"] });
   return _json;

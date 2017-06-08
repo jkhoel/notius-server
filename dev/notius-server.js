@@ -114,9 +114,11 @@ const CheckObservable = (enemy, friendlyUnits, radius) => {
     let dY = (enemy.y - f.lon) * lengths.lon;
     let dZ = enemy.z - f.alt;
 
-    let distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2));
+    let distance = Math.sqrt(
+      Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2)
+    );
 
-    //console.log(enemy.type + " :: Distance to " + f.name + " = " + distance + "(radius = " + radius + ")");
+    console.log(enemy.type + " :: Distance to " + f.type + " = " + distance + "(radius = " + radius + ")");
     //console.log("Distance in nm, Latitude (X):", dX / 1852 );
     //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
 
@@ -169,28 +171,33 @@ const DataParser = data => {
     let unit = Unit.parse(element);
     let check = CheckObservable(unit, blueforCollection, 6000); // radius in meter
 
-    redforCollection.push({
-      type: unit.type,
-      lat: unit.x,
-      lon: unit.y,
-      alt: unit.z,
-      hdg: unit.hdg,
-      speed: unit.speed,
-      callsign: unit.callsign,
-      name: unit.name,
-      SIDC: "",
-      monoColor: "",
-      side: unit.coalition,
-      size: 25,
-      observable: true,
-      observer: check.observer,
-      distance: check.distance,
-    });
+    console.log(unit.type, " => ", check.observable);
+
+    // Add REDFOR unit to the collection if it is observable
+    if (check.observable === true) {
+      redforCollection.push({
+        type: unit.type,
+        lat: unit.x,
+        lon: unit.y,
+        alt: unit.z,
+        hdg: unit.hdg,
+        speed: unit.speed,
+        callsign: unit.callsign,
+        name: unit.name,
+        SIDC: "",
+        monoColor: "",
+        side: unit.coalition,
+        size: 25,
+        observable: true,
+        observer: check.observer,
+        distance: check.distance
+      });
+    }
   });
   //console.log("REDFOR: ", redforCollection);
 
   let _all = blueforCollection.concat(redforCollection);
-   _all.forEach(unit => {
+  _all.forEach(unit => {
     // Setup a default marker
     let _sidcObject = Object.assign({}, SIDCtable["default"]);
     let side = "0";
@@ -222,7 +229,7 @@ const DataParser = data => {
       _sidc += _sidcObject[atr];
     }
 
-   // Add unit to the feature collection
+    // Add unit to the feature collection
     featureCollection.push({
       type: unit.type,
       lat: unit.lat,
@@ -237,7 +244,7 @@ const DataParser = data => {
       side: side,
       size: 25,
       observer: unit.observer,
-      distance: unit.distance,
+      distance: unit.distance
     });
   });
 
