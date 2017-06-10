@@ -31,6 +31,13 @@ do
       local velocity = unit:getVelocity()
       local speed = math.sqrt(velocity.x^2 + velocity.z^2)
 
+      local inAir = 0
+      if unit:inAir() then
+        inAir = 1
+      end
+
+      -- local radarActive, tracking = unit:getRadar()
+
       msg = msg .. "[";
       msg = msg .. "\"" .. unit:getTypeName() .. "\""
       msg = msg .. "," .. lat
@@ -40,6 +47,8 @@ do
       msg = msg .. "," .. speed
       msg = msg .. ",\"" .. unit:getCallsign() .. "\""
       msg = msg .. "," .. unit:getCoalition()
+      msg = msg .. ",\"" .. unit:getName() .. "\""
+      msg = msg .. "," .. inAir
       msg = msg .. "]";
     end
 

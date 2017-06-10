@@ -5,6 +5,7 @@ import net from "net";
 import DCSdataStream from "./js/dcs-data-stream";
 import Utility from "./js/utility";
 import SIDCtable from "./js/sidc";
+import Sensors from "./js/sensors";
 
 /* SETUP ################################################################################################################### */
 const _CLIENTS = 8081; // Notius-Server listen for clients on this port
@@ -49,12 +50,6 @@ const server = websocket.createServer(conn => {
  */
 class Unit {
   static parse(data) {
-    let track = new Date();
-    track =
-      "TR" +
-      ("0" + track.getMinutes()).slice(-2) +
-      ("0" + track.getMilliseconds()).slice(-2);
-
     let unit = new Unit();
     unit.type = data[0];
     unit.x = data[1];
@@ -64,7 +59,8 @@ class Unit {
     unit.speed = data[5];
     unit.callsign = data[6];
     unit.coalition = data[7];
-    unit.name = track;
+    unit.name = data[8];
+    unit.inAir = data[9];
 
     return unit;
   }
@@ -80,7 +76,8 @@ class Unit {
     this.speed = 0;
     this.callsign = "";
     this.coalition = 0;
-    this.name = "";
+    this.name = "UNKNOWN";
+    this.inAir = 0;
     this.sidc = "";
     this.observable = false;
     this.observer = "";
@@ -97,7 +94,7 @@ class Unit {
 // TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
 // TODO: observer should allways be the closest unit
 
-const CheckObservable = (enemy, friendlyUnits, radius) => {
+const CheckObservable = (enemy, friendlyUnits) => {
   let state = {
     observable: false,
     observer: "",
@@ -109,6 +106,23 @@ const CheckObservable = (enemy, friendlyUnits, radius) => {
     // Based on the latitude of enemy, get the actual distances for 1deg of lat and long
     let lengths = Utility.calcLatLonDistances(enemy.x);
 
+    // Get blue units sensor capabilites. retrieves the default values, then overwrites if there are actual values for this unit in the table
+    let _sensors = Object.assign({}, Sensors["default"]);
+    _sensors = Object.assign(_sensors, Sensors[f.type]);
+    
+    // Radius will default to ground range for the blue unit
+    let radius = _sensors.ground;
+
+    // ..but if enemy is airborne
+    if(enemy.inAir == 1) {
+      // check if the blue unit is above the enemy - and set range accordingly
+      if( enemy.z < f.alt ) {
+        radius = _sensors.airAbove;
+      } else {
+        radius = _sensors.airBelow;
+      }
+    }
+
     // Calculate deltas in meters
     let dX = (enemy.x - f.lat) * lengths.lat;
     let dY = (enemy.y - f.lon) * lengths.lon;
@@ -118,13 +132,13 @@ const CheckObservable = (enemy, friendlyUnits, radius) => {
       Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2)
     );
 
-    console.log(enemy.type + " :: Distance to " + f.type + " = " + distance + "(radius = " + radius + ")");
+    //console.log("REDUNIT: "+ enemy.type + " :: Distance to " + f.type + " = " + Math.round(distance) + " meters :: Radius = " + radius+ " meters");
     //console.log("Distance in nm, Latitude (X):", dX / 1852 );
     //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
 
     if (distance <= radius) {
       state.observable = true;
-      state.observer = f.name;
+      state.observer = f.type;
       state.distance = distance;
     }
   });
@@ -155,6 +169,7 @@ const DataParser = data => {
       speed: unit.speed,
       callsign: unit.callsign,
       name: unit.name,
+      inAir: unit.inAir,
       SIDC: "",
       monoColor: "",
       side: unit.coalition,
@@ -169,12 +184,15 @@ const DataParser = data => {
   // REDFOR Collection
   data.red.forEach(element => {
     let unit = Unit.parse(element);
-    let check = CheckObservable(unit, blueforCollection, 6000); // radius in meter
+    let check = CheckObservable(unit, blueforCollection);
 
-    console.log(unit.type, " => ", check.observable);
+    //console.log(unit.type, " => ", check.observable);
 
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
+
+      console.log("REDUNIT: "+ unit.type + " :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
+      
       redforCollection.push({
         type: unit.type,
         lat: unit.x,
@@ -184,6 +202,7 @@ const DataParser = data => {
         speed: unit.speed,
         callsign: unit.callsign,
         name: unit.name,
+        inAir: unit.inAir,
         SIDC: "",
         monoColor: "",
         side: unit.coalition,

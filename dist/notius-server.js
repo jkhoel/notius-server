@@ -26,6 +26,10 @@ var _sidc2 = require("./js/sidc");
 
 var _sidc3 = _interopRequireDefault(_sidc2);
 
+var _sensors2 = require("./js/sensors");
+
+var _sensors3 = _interopRequireDefault(_sensors2);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -62,9 +66,6 @@ var Unit = function () {
   _createClass(Unit, null, [{
     key: "parse",
     value: function parse(data) {
-      var track = new Date();
-      track = "TR" + ("0" + track.getMinutes()).slice(-2) + ("0" + track.getMilliseconds()).slice(-2);
-
       var unit = new Unit();
       unit.type = data[0];
       unit.x = data[1];
@@ -74,7 +75,8 @@ var Unit = function () {
       unit.speed = data[5];
       unit.callsign = data[6];
       unit.coalition = data[7];
-      unit.name = track;
+      unit.name = data[8];
+      unit.inAir = data[9];
 
       return unit;
     }
@@ -94,7 +96,8 @@ var Unit = function () {
     this.speed = 0;
     this.callsign = "";
     this.coalition = 0;
-    this.name = "";
+    this.name = "UNKNOWN";
+    this.inAir = 0;
     this.sidc = "";
     this.observable = false;
     this.observer = "";
@@ -113,7 +116,7 @@ var Unit = function () {
 // TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
 // TODO: observer should allways be the closest unit
 
-var CheckObservable = function CheckObservable(enemy, friendlyUnits, radius) {
+var CheckObservable = function CheckObservable(enemy, friendlyUnits) {
   var state = {
     observable: false,
     observer: "",
@@ -125,6 +128,23 @@ var CheckObservable = function CheckObservable(enemy, friendlyUnits, radius) {
     // Based on the latitude of enemy, get the actual distances for 1deg of lat and long
     var lengths = _utility2.default.calcLatLonDistances(enemy.x);
 
+    // Get blue units sensor capabilites. retrieves the default values, then overwrites if there are actual values for this unit in the table
+    var _sensors = Object.assign({}, _sensors3.default["default"]);
+    _sensors = Object.assign(_sensors, _sensors3.default[f.type]);
+
+    // Radius will default to ground range for the blue unit
+    var radius = _sensors.ground;
+
+    // ..but if enemy is airborne
+    if (enemy.inAir == 1) {
+      // check if the blue unit is above the enemy - and set range accordingly
+      if (enemy.z < f.alt) {
+        radius = _sensors.airAbove;
+      } else {
+        radius = _sensors.airBelow;
+      }
+    }
+
     // Calculate deltas in meters
     var dX = (enemy.x - f.lat) * lengths.lat;
     var dY = (enemy.y - f.lon) * lengths.lon;
@@ -132,13 +152,13 @@ var CheckObservable = function CheckObservable(enemy, friendlyUnits, radius) {
 
     var distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2));
 
-    console.log(enemy.type + " :: Distance to " + f.type + " = " + distance + "(radius = " + radius + ")");
+    //console.log("REDUNIT: "+ enemy.type + " :: Distance to " + f.type + " = " + Math.round(distance) + " meters :: Radius = " + radius+ " meters");
     //console.log("Distance in nm, Latitude (X):", dX / 1852 );
     //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
 
     if (distance <= radius) {
       state.observable = true;
-      state.observer = f.name;
+      state.observer = f.type;
       state.distance = distance;
     }
   });
@@ -169,6 +189,7 @@ var DataParser = function DataParser(data) {
       speed: unit.speed,
       callsign: unit.callsign,
       name: unit.name,
+      inAir: unit.inAir,
       SIDC: "",
       monoColor: "",
       side: unit.coalition,
@@ -183,12 +204,15 @@ var DataParser = function DataParser(data) {
   // REDFOR Collection
   data.red.forEach(function (element) {
     var unit = Unit.parse(element);
-    var check = CheckObservable(unit, blueforCollection, 6000); // radius in meter
+    var check = CheckObservable(unit, blueforCollection);
 
-    console.log(unit.type, " => ", check.observable);
+    //console.log(unit.type, " => ", check.observable);
 
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
+
+      console.log("REDUNIT: " + unit.type + " :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
+
       redforCollection.push({
         type: unit.type,
         lat: unit.x,
@@ -198,6 +222,7 @@ var DataParser = function DataParser(data) {
         speed: unit.speed,
         callsign: unit.callsign,
         name: unit.name,
+        inAir: unit.inAir,
         SIDC: "",
         monoColor: "",
         side: unit.coalition,
