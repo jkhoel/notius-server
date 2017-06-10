@@ -42,8 +42,9 @@ do
         radarOn = 1
       end
 
-      msg = msg .. "[";
-      msg = msg .. "\"" .. unit:getTypeName() .. "\""
+      msg = msg .. "["
+      msg = msg .. unit:getID()
+      msg = msg .. ",\"" .. unit:getTypeName() .. "\""
       msg = msg .. "," .. lat
       msg = msg .. "," .. lon
       msg = msg .. "," .. alt
@@ -54,7 +55,7 @@ do
       msg = msg .. ",\"" .. unit:getName() .. "\""
       msg = msg .. "," .. inAir
       msg = msg .. "," .. radarOn
-      msg = msg .. "]";
+      msg = msg .. "]"
     end
 
     local function addGroups(groups)

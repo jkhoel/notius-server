@@ -1,9 +1,5 @@
 let Sensors = {
-  default: {
-    airAbove: 6000,
-    airBelow: 6000,
-    ground: 6000
-  },
+  default: { airAbove: 6000, airBelow: 6000, ground: 6000 },
 
   // FIXED WING
   AJS37: {
@@ -11,21 +7,9 @@ let Sensors = {
     airBelow: (50824.265625 + 23405.912109375) / 2,
     ground: 6000
   },
-  "A-10A": {
-    airAbove: 6000,
-    airBelow: 6000,
-    ground: 6000
-  },
-  "A-10C": {
-    airAbove: 6000,
-    airBelow: 6000,
-    ground: 6000
-  },
-  "A-50": {
-    airAbove: 204461.796875,
-    airBelow: 204461.796875,
-    ground: 6000
-  },
+  "A-10A": { airAbove: 6000, airBelow: 6000, ground: 6000 },
+  "A-10C": { airAbove: 6000, airBelow: 6000, ground: 6000 },
+  "A-50": { airAbove: 204461.796875, airBelow: 204461.796875, ground: 6000 },
   "An-26B": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "An-30M": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "B-1B": { airAbove: 6000, airBelow: 6000, ground: 6000 },
@@ -36,7 +20,7 @@ let Sensors = {
   "C-130": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "C-17A": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "E-2C": { airAbove: 210851.234375, airBelow: 210851.234375, ground: 2800 },
-  "E-3A": { airAbove: 255577.25, airBelow: 255577.25, ground: 3000 },           // 138 nm
+  "E-3A": { airAbove: 255577.25, airBelow: 255577.25, ground: 3000 },
   "F-14A": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "F-15C": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "F-15E": { airAbove: 6000, airBelow: 6000, ground: 6000 },

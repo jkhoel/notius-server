@@ -13,6 +13,12 @@ const _DCS = { port: 3001, address: "127.0.0.1" }; // Notius-Server connects to 
 
 /* ######################################################################################################################### */
 
+/* 
+  GLOBALS
+*/
+
+let _oldFeatures = [];
+
 /*
   WEBSOCKET SETUP
 */
@@ -51,17 +57,18 @@ const server = websocket.createServer(conn => {
 class Unit {
   static parse(data) {
     let unit = new Unit();
-    unit.type = data[0];
-    unit.x = data[1];
-    unit.y = data[2];
-    unit.z = data[3];
-    unit.hdg = data[4];
-    unit.speed = data[5];
-    unit.callsign = data[6];
-    unit.coalition = data[7];
-    unit.name = data[8];
-    unit.inAir = data[9];
-    unit.radarOn = data[10];
+    unit.id = data[0];
+    unit.type = data[1];
+    unit.x = data[2];
+    unit.y = data[3];
+    unit.z = data[4];
+    unit.hdg = data[5];
+    unit.speed = data[6];
+    unit.callsign = data[7];
+    unit.coalition = data[8];
+    unit.name = data[9];
+    unit.inAir = data[10];
+    unit.radarOn = data[11];
 
     return unit;
   }
@@ -69,6 +76,7 @@ class Unit {
   static sidc(type) {}
 
   constructor() {
+    this.id = 0;
     this.type = "";
     this.x = 0;
     this.y = 0;
@@ -84,6 +92,7 @@ class Unit {
     this.observable = false;
     this.observer = "";
     this.distance = 0;
+    this.faded = false;
   }
 }
 
@@ -92,7 +101,6 @@ class Unit {
 */
 
 // TODO: If a unit name is prefixed with OBSERVABLE_ then it should be added to the list no matter what
-// TODO: Radius should be based off of the bluefor units sensor range
 // TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
 // TODO: observer should allways be the closest unit
 
@@ -157,12 +165,14 @@ const DataParser = data => {
 
   let blueforCollection = [];
   let redforCollection = [];
+  let fadedCollection = [];
 
   // BLUEFOR Collection
   data.blue.forEach(element => {
     let unit = Unit.parse(element);
 
     blueforCollection.push({
+      id: unit.id,
       type: unit.type,
       lat: unit.x,
       lon: unit.y,
@@ -179,7 +189,8 @@ const DataParser = data => {
       size: 25,
       observable: true,
       observer: null,
-      distance: null
+      distance: null,
+      faded: false
     });
   });
   //console.log("BLUEFOR: ", bluefor);
@@ -188,8 +199,6 @@ const DataParser = data => {
   data.red.forEach(element => {
     let unit = Unit.parse(element);
     let check = CheckObservable(unit, blueforCollection);
-
-    //console.log(unit.type, " => ", check.observable);
 
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
@@ -204,6 +213,7 @@ const DataParser = data => {
       );
 
       redforCollection.push({
+        id: unit.id,
         type: unit.type,
         lat: unit.x,
         lon: unit.y,
@@ -220,18 +230,38 @@ const DataParser = data => {
         size: 25,
         observable: true,
         observer: check.observer,
-        distance: check.distance
+        distance: check.distance,
+        faded: false
       });
     }
   });
   //console.log("REDFOR: ", redforCollection);
 
   let _all = blueforCollection.concat(redforCollection);
+
+  //Checks if all previous visible units in the _oldFeatures collection exists in the new _all collection. If one does not, then it should be added to the collection with faded set true
+  _oldFeatures.forEach(old => {
+    let addToCollection = true;
+    _all.forEach(unit => {
+      if (old.id === unit.id) addToCollection = false;
+    });
+    if (addToCollection) {
+      old.faded = true;
+      fadedCollection.push(old);
+    }
+  });
+
+  console.log(fadedCollection);
+
+  _all = _all.concat(fadedCollection);
+  _oldFeatures = _all;
+
   _all.forEach(unit => {
     // Setup a default marker
     let _sidcObject = Object.assign({}, SIDCtable["default"]);
     let side = "0";
     let markerColor = "rgb(252, 246, 127)";
+    if (unit.faded) markerColor = "rgba(252, 246, 127, 0.5)";
 
     // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
     if (SIDCtable[unit.type])
@@ -241,12 +271,14 @@ const DataParser = data => {
     if (unit.side === 1) {
       side = "1";
       markerColor = "rgb(255, 88, 88)";
+      if (unit.faded) markerColor = "rgba(255, 88, 88, 0.5)";
       _sidcObject["affiliation"] = "H";
     }
 
     if (unit.side === 2) {
       side = "2";
       markerColor = "rgb(128, 224, 255)";
+      if (unit.faded) markerColor = "rgba(128, 224, 255, 0.5)";
       _sidcObject["affiliation"] = "F";
     }
 
@@ -254,13 +286,17 @@ const DataParser = data => {
     //_sidcObject["functionID"] = '-----';
 
     // Generate final SIDC string
+    if (unit.faded) _sidcObject["status"] = "A";
     let _sidc = "";
     for (var atr in _sidcObject) {
       _sidc += _sidcObject[atr];
     }
 
+    
+
     // Add unit to the feature collection
     featureCollection.push({
+      id: unit.id,
       type: unit.type,
       lat: unit.lat,
       lon: unit.lon,
@@ -274,7 +310,8 @@ const DataParser = data => {
       side: side,
       size: 25,
       observer: unit.observer,
-      distance: unit.distance
+      distance: unit.distance,
+      faded: unit.faded
     });
   });
 

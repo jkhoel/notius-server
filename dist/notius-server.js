@@ -40,6 +40,12 @@ var _DCS = { port: 3001, address: "127.0.0.1" }; // Notius-Server connects to th
 
 /* ######################################################################################################################### */
 
+/* 
+  GLOBALS
+*/
+
+var _oldFeatures = [];
+
 /*
   WEBSOCKET SETUP
 */
@@ -67,17 +73,18 @@ var Unit = function () {
     key: "parse",
     value: function parse(data) {
       var unit = new Unit();
-      unit.type = data[0];
-      unit.x = data[1];
-      unit.y = data[2];
-      unit.z = data[3];
-      unit.hdg = data[4];
-      unit.speed = data[5];
-      unit.callsign = data[6];
-      unit.coalition = data[7];
-      unit.name = data[8];
-      unit.inAir = data[9];
-      unit.radarOn = data[10];
+      unit.id = data[0];
+      unit.type = data[1];
+      unit.x = data[2];
+      unit.y = data[3];
+      unit.z = data[4];
+      unit.hdg = data[5];
+      unit.speed = data[6];
+      unit.callsign = data[7];
+      unit.coalition = data[8];
+      unit.name = data[9];
+      unit.inAir = data[10];
+      unit.radarOn = data[11];
 
       return unit;
     }
@@ -89,6 +96,7 @@ var Unit = function () {
   function Unit() {
     _classCallCheck(this, Unit);
 
+    this.id = 0;
     this.type = "";
     this.x = 0;
     this.y = 0;
@@ -104,6 +112,7 @@ var Unit = function () {
     this.observable = false;
     this.observer = "";
     this.distance = 0;
+    this.faded = false;
   }
 
   return Unit;
@@ -114,7 +123,6 @@ var Unit = function () {
 */
 
 // TODO: If a unit name is prefixed with OBSERVABLE_ then it should be added to the list no matter what
-// TODO: Radius should be based off of the bluefor units sensor range
 // TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
 // TODO: observer should allways be the closest unit
 
@@ -177,12 +185,14 @@ var DataParser = function DataParser(data) {
 
   var blueforCollection = [];
   var redforCollection = [];
+  var fadedCollection = [];
 
   // BLUEFOR Collection
   data.blue.forEach(function (element) {
     var unit = Unit.parse(element);
 
     blueforCollection.push({
+      id: unit.id,
       type: unit.type,
       lat: unit.x,
       lon: unit.y,
@@ -199,7 +209,8 @@ var DataParser = function DataParser(data) {
       size: 25,
       observable: true,
       observer: null,
-      distance: null
+      distance: null,
+      faded: false
     });
   });
   //console.log("BLUEFOR: ", bluefor);
@@ -209,13 +220,12 @@ var DataParser = function DataParser(data) {
     var unit = Unit.parse(element);
     var check = CheckObservable(unit, blueforCollection);
 
-    //console.log(unit.type, " => ", check.observable);
-
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
       console.log("REDUNIT: " + unit.type + "\t\t :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
 
       redforCollection.push({
+        id: unit.id,
         type: unit.type,
         lat: unit.x,
         lon: unit.y,
@@ -232,18 +242,38 @@ var DataParser = function DataParser(data) {
         size: 25,
         observable: true,
         observer: check.observer,
-        distance: check.distance
+        distance: check.distance,
+        faded: false
       });
     }
   });
   //console.log("REDFOR: ", redforCollection);
 
   var _all = blueforCollection.concat(redforCollection);
+
+  //Checks if all previous visible units in the _oldFeatures collection exists in the new _all collection. If one does not, then it should be added to the collection with faded set true
+  _oldFeatures.forEach(function (old) {
+    var addToCollection = true;
+    _all.forEach(function (unit) {
+      if (old.id === unit.id) addToCollection = false;
+    });
+    if (addToCollection) {
+      old.faded = true;
+      fadedCollection.push(old);
+    }
+  });
+
+  console.log(fadedCollection);
+
+  _all = _all.concat(fadedCollection);
+  _oldFeatures = _all;
+
   _all.forEach(function (unit) {
     // Setup a default marker
     var _sidcObject = Object.assign({}, _sidc3.default["default"]);
     var side = "0";
     var markerColor = "rgb(252, 246, 127)";
+    if (unit.faded) markerColor = "rgba(252, 246, 127, 0.5)";
 
     // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
     if (_sidc3.default[unit.type]) _sidcObject = Object.assign(_sidcObject, _sidc3.default[unit.type]);
@@ -252,12 +282,14 @@ var DataParser = function DataParser(data) {
     if (unit.side === 1) {
       side = "1";
       markerColor = "rgb(255, 88, 88)";
+      if (unit.faded) markerColor = "rgba(255, 88, 88, 0.5)";
       _sidcObject["affiliation"] = "H";
     }
 
     if (unit.side === 2) {
       side = "2";
       markerColor = "rgb(128, 224, 255)";
+      if (unit.faded) markerColor = "rgba(128, 224, 255, 0.5)";
       _sidcObject["affiliation"] = "F";
     }
 
@@ -265,6 +297,7 @@ var DataParser = function DataParser(data) {
     //_sidcObject["functionID"] = '-----';
 
     // Generate final SIDC string
+    if (unit.faded) _sidcObject["status"] = "A";
     var _sidc = "";
     for (var atr in _sidcObject) {
       _sidc += _sidcObject[atr];
@@ -272,6 +305,7 @@ var DataParser = function DataParser(data) {
 
     // Add unit to the feature collection
     featureCollection.push({
+      id: unit.id,
       type: unit.type,
       lat: unit.lat,
       lon: unit.lon,
@@ -285,7 +319,8 @@ var DataParser = function DataParser(data) {
       side: side,
       size: 25,
       observer: unit.observer,
-      distance: unit.distance
+      distance: unit.distance,
+      faded: unit.faded
     });
   });
 
