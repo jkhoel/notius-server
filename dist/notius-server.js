@@ -77,6 +77,7 @@ var Unit = function () {
       unit.coalition = data[7];
       unit.name = data[8];
       unit.inAir = data[9];
+      unit.radarOn = data[10];
 
       return unit;
     }
@@ -98,6 +99,7 @@ var Unit = function () {
     this.coalition = 0;
     this.name = "UNKNOWN";
     this.inAir = 0;
+    this.radarOn = 0;
     this.sidc = "";
     this.observable = false;
     this.observer = "";
@@ -135,8 +137,8 @@ var CheckObservable = function CheckObservable(enemy, friendlyUnits) {
     // Radius will default to ground range for the blue unit
     var radius = _sensors.ground;
 
-    // ..but if enemy is airborne
-    if (enemy.inAir == 1) {
+    // ..but if enemy is airborne and has its radar on...
+    if (enemy.inAir == 1 && f.radarOn == 1) {
       // check if the blue unit is above the enemy - and set range accordingly
       if (enemy.z < f.alt) {
         radius = _sensors.airAbove;
@@ -190,6 +192,7 @@ var DataParser = function DataParser(data) {
       callsign: unit.callsign,
       name: unit.name,
       inAir: unit.inAir,
+      radarOn: unit.radarOn,
       SIDC: "",
       monoColor: "",
       side: unit.coalition,
@@ -210,8 +213,7 @@ var DataParser = function DataParser(data) {
 
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
-
-      console.log("REDUNIT: " + unit.type + " :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
+      console.log("REDUNIT: " + unit.type + "\t\t :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
 
       redforCollection.push({
         type: unit.type,
@@ -223,6 +225,7 @@ var DataParser = function DataParser(data) {
         callsign: unit.callsign,
         name: unit.name,
         inAir: unit.inAir,
+        radarOn: unit.radarOn,
         SIDC: "",
         monoColor: "",
         side: unit.coalition,
@@ -294,10 +297,13 @@ var DataParser = function DataParser(data) {
   FUNCTION: ParseAndTransmit() -> Transmits data to all connected clients
 */
 var ParseAndTransmit = function ParseAndTransmit(data) {
+  console.log("\n");
+  console.time("============== Parsed last cycle in");
+
   var _collection = DataParser(data);
   for (var connection in wsConnections) {
     wsConnections[connection].sendText(JSON.stringify(_collection));
-  }
+  }console.timeEnd("============== Parsed last cycle in");
 };
 
 /*

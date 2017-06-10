@@ -36,7 +36,11 @@ do
         inAir = 1
       end
 
-      -- local radarActive, tracking = unit:getRadar()
+      local radarOn = 0
+      local radarActive, tracking = unit:getRadar()
+      if radarActive then
+        radarOn = 1
+      end
 
       msg = msg .. "[";
       msg = msg .. "\"" .. unit:getTypeName() .. "\""
@@ -49,6 +53,7 @@ do
       msg = msg .. "," .. unit:getCoalition()
       msg = msg .. ",\"" .. unit:getName() .. "\""
       msg = msg .. "," .. inAir
+      msg = msg .. "," .. radarOn
       msg = msg .. "]";
     end
 

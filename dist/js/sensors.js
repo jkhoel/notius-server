@@ -38,7 +38,7 @@ var Sensors = {
   "C-130": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "C-17A": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "E-2C": { airAbove: 210851.234375, airBelow: 210851.234375, ground: 2800 },
-  "E-3A": { airAbove: 255577.25, airBelow: 255577.25, ground: 3000 },
+  "E-3A": { airAbove: 255577.25, airBelow: 255577.25, ground: 3000 }, // 138 nm
   "F-14A": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "F-15C": { airAbove: 6000, airBelow: 6000, ground: 6000 },
   "F-15E": { airAbove: 6000, airBelow: 6000, ground: 6000 },

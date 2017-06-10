@@ -61,6 +61,7 @@ class Unit {
     unit.coalition = data[7];
     unit.name = data[8];
     unit.inAir = data[9];
+    unit.radarOn = data[10];
 
     return unit;
   }
@@ -78,6 +79,7 @@ class Unit {
     this.coalition = 0;
     this.name = "UNKNOWN";
     this.inAir = 0;
+    this.radarOn = 0;
     this.sidc = "";
     this.observable = false;
     this.observer = "";
@@ -109,14 +111,14 @@ const CheckObservable = (enemy, friendlyUnits) => {
     // Get blue units sensor capabilites. retrieves the default values, then overwrites if there are actual values for this unit in the table
     let _sensors = Object.assign({}, Sensors["default"]);
     _sensors = Object.assign(_sensors, Sensors[f.type]);
-    
+
     // Radius will default to ground range for the blue unit
     let radius = _sensors.ground;
 
-    // ..but if enemy is airborne
-    if(enemy.inAir == 1) {
+    // ..but if enemy is airborne and has its radar on...
+    if (enemy.inAir == 1 && f.radarOn == 1) {
       // check if the blue unit is above the enemy - and set range accordingly
-      if( enemy.z < f.alt ) {
+      if (enemy.z < f.alt) {
         radius = _sensors.airAbove;
       } else {
         radius = _sensors.airBelow;
@@ -170,6 +172,7 @@ const DataParser = data => {
       callsign: unit.callsign,
       name: unit.name,
       inAir: unit.inAir,
+      radarOn: unit.radarOn,
       SIDC: "",
       monoColor: "",
       side: unit.coalition,
@@ -190,9 +193,16 @@ const DataParser = data => {
 
     // Add REDFOR unit to the collection if it is observable
     if (check.observable === true) {
+      console.log(
+        "REDUNIT: " +
+          unit.type +
+          "\t\t :: Distance to " +
+          check.observer +
+          " = " +
+          Math.round(check.distance) +
+          " meters"
+      );
 
-      console.log("REDUNIT: "+ unit.type + " :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
-      
       redforCollection.push({
         type: unit.type,
         lat: unit.x,
@@ -203,6 +213,7 @@ const DataParser = data => {
         callsign: unit.callsign,
         name: unit.name,
         inAir: unit.inAir,
+        radarOn: unit.radarOn,
         SIDC: "",
         monoColor: "",
         side: unit.coalition,
@@ -275,9 +286,14 @@ const DataParser = data => {
   FUNCTION: ParseAndTransmit() -> Transmits data to all connected clients
 */
 const ParseAndTransmit = data => {
+  console.log("\n");
+  console.time("============== Parsed last cycle in");
+
   let _collection = DataParser(data);
   for (let connection in wsConnections)
     wsConnections[connection].sendText(JSON.stringify(_collection));
+
+  console.timeEnd("============== Parsed last cycle in");
 };
 
 /*
