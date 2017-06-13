@@ -315,8 +315,8 @@ const DataParser = data => {
     });
   });
 
-  let _json = GeoJSON.parse(featureCollection, { Point: ["lat", "lon"] });
-  return _json;
+  let _package = featureCollection;
+  return _package;
 };
 
 /*

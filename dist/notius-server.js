@@ -324,8 +324,13 @@ var DataParser = function DataParser(data) {
     });
   });
 
-  var _json = _geojson2.default.parse(featureCollection, { Point: ["lat", "lon"] });
-  return _json;
+  //let _package = GeoJSON.parse(featureCollection, { Point: ["lat", "lon"] });
+  console.log("-----------------------------------------------------------------");
+  console.log(featureCollection);
+  console.log("-----------------------------------------------------------------");
+
+  var _package = featureCollection;
+  return _package;
 };
 
 /*
