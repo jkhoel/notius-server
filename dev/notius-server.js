@@ -1,5 +1,4 @@
 import websocket from "nodejs-websocket";
-import GeoJSON from "geojson";
 import net from "net";
 
 import DCSdataStream from "./js/dcs-data-stream";
@@ -250,8 +249,6 @@ const DataParser = data => {
       fadedCollection.push(old);
     }
   });
-
-  console.log(fadedCollection);
 
   _all = _all.concat(fadedCollection);
   _oldFeatures = _all;

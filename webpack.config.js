@@ -15,8 +15,9 @@ fs
   });
 
 const t = new Date();
-const timestamp = "" + t.getHours() + "" + t.getMinutes() + "" + t.getSeconds();
-const filename = `notius-server.min.${timestamp}.js`;
+//const timestamp = "" + t.getHours() + "" + t.getMinutes() + "" + t.getSeconds();
+//const filename = `notius-server.min.${timestamp}.js`;
+const filename = `notius-server.min.js`;
 
 module.exports = {
   entry: "./dist/notius-server.js",

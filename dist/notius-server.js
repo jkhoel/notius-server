@@ -263,8 +263,6 @@ var DataParser = function DataParser(data) {
     }
   });
 
-  console.log(fadedCollection);
-
   _all = _all.concat(fadedCollection);
   _oldFeatures = _all;
 
