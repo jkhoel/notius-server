@@ -11,10 +11,11 @@
     "rimraf": "^2.6.1"
   },
   "scripts": {
-    "start": "npm run build:min && node ./dist/notius-server.min.js",
+    "start": "node ./dist/notius-server.min.js",
     "pack": "webpack --watch -p --progress --colors --profile",
     "build:dev": "babel ./src --out-dir build --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files ",
     "build:min": "webpack -p --progress --profile --colors",
+    "build:start": "npm run build:min && node ./dist/notius-server.min.js",
     "dev": "npm run build:dev && node build/notius-server.js"
   },
   "repository": {
