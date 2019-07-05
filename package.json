@@ -11,10 +11,10 @@
     "rimraf": "^2.6.1"
   },
   "scripts": {
-    "start": "npm run build:min && node ./build/notius-server.min.js",
-    "pack": "webpack --watch -p --progress --profile --colors",
+    "start": "npm run build:min && node ./dist/notius-server.min.js",
+    "pack": "webpack --watch -p --progress --colors --profile",
     "build:dev": "babel ./src --out-dir build --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files ",
-    "build:min": "npm run build:dev && webpack -p --progress --profile --colors",
+    "build:min": "webpack -p --progress --profile --colors",
     "dev": "npm run build:dev && node build/notius-server.js"
   },
   "repository": {
@@ -31,6 +31,8 @@
     "@babel/cli": "^7.5.0",
     "@babel/core": "^7.5.0",
     "@babel/preset-env": "^7.5.0",
+    "babel-loader": "^8.0.6",
+    "babel-minify-webpack-plugin": "^0.3.1",
     "webpack": "^2.7.0",
     "webpack-cli": "^3.3.5"
   }

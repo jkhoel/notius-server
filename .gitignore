@@ -6,11 +6,11 @@
 # testing
 /coverage
 
-# production
+# development build
 /build
 
-# development build
-/dev
+# distribution build
+/dist
 
 # misc
 .DS_Store
