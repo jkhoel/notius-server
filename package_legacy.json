@@ -2,7 +2,7 @@
   "name": "notius-server",
   "version": "0.0.1",
   "description": "a Node.js server for DCS:WORLD and Notius-MMS",
-  "private": true,
+  "main": "webpack.config.js",
   "dependencies": {
     "express": "^4.15.2",
     "fs": "^0.0.1-security",
@@ -11,11 +11,11 @@
     "rimraf": "^2.6.1"
   },
   "scripts": {
-    "start": "npm run build:min && node ./build/notius-server.min.js",
+    "start": "node ./build/notius-server.js",
     "pack": "webpack --watch -p --progress --profile --colors",
-    "build:dev": "babel ./src --out-dir build --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files ",
-    "build:min": "npm run build:dev && webpack -p --progress --profile --colors",
-    "dev": "npm run build:dev && node build/notius-server.js"
+    "build": "babel ./dev --out-dir build --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files ",
+    "build:min": "npm run build && npm run pack",
+    "dev": "npm run build && node build/notius-server.js"
   },
   "repository": {
     "type": "git",
