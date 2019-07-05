@@ -15,7 +15,7 @@
     "start": "node ./build/notius-server.js",
     "pack": "webpack --watch -p --progress --profile --colors",
     "build": "babel ./dev --out-dir build --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files ",
-    "dev": "npm run babel && node dist/notius-server.js"
+    "dev": "npm run build && node build/notius-server.js"
   },
   "repository": {
     "type": "git",
