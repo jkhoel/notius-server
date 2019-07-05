@@ -1,14 +1,32 @@
-import websocket from "nodejs-websocket";
-import net from "net";
+"use strict";
 
-import DCSdataStream from "./js/dcs-data-stream";
-import Utility from "./js/utility";
-import SIDCtable from "./js/sidc";
-import Sensors from "./js/sensors";
+var _nodejsWebsocket = _interopRequireDefault(require("nodejs-websocket"));
+
+var _net = _interopRequireDefault(require("net"));
+
+var _dcsDataStream = _interopRequireDefault(require("./js/dcs-data-stream"));
+
+var _utility = _interopRequireDefault(require("./js/utility"));
+
+var _sidc2 = _interopRequireDefault(require("./js/sidc"));
+
+var _sensors2 = _interopRequireDefault(require("./js/sensors"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 /* SETUP ################################################################################################################### */
-const _CLIENTS = 8081; // Notius-Server listen for clients on this port
-const _DCS = { port: 3001, address: "127.0.0.1" }; // Notius-Server connects to the DCS Server on this port an address
+var _CLIENTS = 8081; // Notius-Server listen for clients on this port
+
+var _DCS = {
+  port: 3001,
+  address: "127.0.0.1"
+}; // Notius-Server connects to the DCS Server on this port an address
 
 /* ######################################################################################################################### */
 
@@ -16,65 +34,60 @@ const _DCS = { port: 3001, address: "127.0.0.1" }; // Notius-Server connects to 
   GLOBALS
 */
 
-let _oldFeatures = [];
-
+var _oldFeatures = [];
 /*
   WEBSOCKET SETUP
 */
-let wsConnections = [];
-const server = websocket.createServer(conn => {
-  let t = new Date();
-  console.log(
-    t.getHours() +
-      ":" +
-      t.getMinutes() +
-      ":" +
-      t.getSeconds() +
-      " :: <- Client connected"
-  );
+
+var wsConnections = [];
+
+var server = _nodejsWebsocket["default"].createServer(function (conn) {
+  var t = new Date();
+  console.log(t.getHours() + ":" + t.getMinutes() + ":" + t.getSeconds() + " :: <- Client connected");
   wsConnections.push(conn);
-  conn.on("close", function(code, reason) {
+  conn.on("close", function (code, reason) {
     wsConnections.splice(wsConnections.indexOf(conn), 1);
     t = new Date();
-    console.log(
-      t.getHours() +
-        ":" +
-        t.getMinutes() +
-        ":" +
-        t.getSeconds() +
-        " :: -> Client disconnected"
-    );
+    console.log(t.getHours() + ":" + t.getMinutes() + ":" + t.getSeconds() + " :: -> Client disconnected");
   });
-  conn.on("error", function(error) {
+  conn.on("error", function (error) {
     console.log("::: ERROR: ", error);
   });
 });
-
 /*
   CLASS: Unit -> Defines an object of type unit with the attributes we would expect a DCS unit to have
  */
-class Unit {
-  static parse(data) {
-    let unit = new Unit();
-    unit.id = data[0];
-    unit.type = data[1];
-    unit.x = data[2];
-    unit.y = data[3];
-    unit.z = data[4];
-    unit.hdg = data[5];
-    unit.speed = data[6];
-    unit.callsign = data[7];
-    unit.coalition = data[8];
-    unit.name = data[9];
-    unit.inAir = data[10];
-    unit.radarOn = data[11];
 
-    return unit;
-  }
 
-  static sidc(type) {}
+var Unit =
+/*#__PURE__*/
+function () {
+  _createClass(Unit, null, [{
+    key: "parse",
+    value: function parse(data) {
+      var unit = new Unit();
+      unit.id = data[0];
+      unit.type = data[1];
+      unit.x = data[2];
+      unit.y = data[3];
+      unit.z = data[4];
+      unit.hdg = data[5];
+      unit.speed = data[6];
+      unit.callsign = data[7];
+      unit.coalition = data[8];
+      unit.name = data[9];
+      unit.inAir = data[10];
+      unit.radarOn = data[11];
+      return unit;
+    }
+  }, {
+    key: "sidc",
+    value: function sidc(type) {}
+  }]);
 
-  constructor() {
+  function Unit() {
+    _classCallCheck(this, Unit);
+
     this.id = 0;
     this.type = "";
     this.x = 0;
@@ -93,36 +106,35 @@ class Unit {
     this.distance = 0;
     this.faded = false;
   }
-}
 
+  return Unit;
+}();
 /*
   FUNCTION: CheckObservable() -> Checks if the unit is within the radius of any enemy units. If so, it returns true
 */
-
 // TODO: If a unit name is prefixed with OBSERVABLE_ then it should be added to the list no matter what
 // TODO: Add a delay in order to simulate information passing trough the chain. Delay dependant on unit type (comms equipment) with RECON_ units having a shorter delay
 // TODO: observer should allways be the closest unit
 
-const CheckObservable = (enemy, friendlyUnits) => {
-  let state = {
+
+var CheckObservable = function CheckObservable(enemy, friendlyUnits) {
+  var state = {
     observable: false,
     observer: "",
     distance: 0
-  };
+  }; // For each friendlyUnit, check if the enemy unit is within the radius
 
-  // For each friendlyUnit, check if the enemy unit is within the radius
-  friendlyUnits.forEach(f => {
+  friendlyUnits.forEach(function (f) {
     // Based on the latitude of enemy, get the actual distances for 1deg of lat and long
-    let lengths = Utility.calcLatLonDistances(enemy.x);
+    var lengths = _utility["default"].calcLatLonDistances(enemy.x); // Get blue units sensor capabilites. retrieves the default values, then overwrites if there are actual values for this unit in the table
 
-    // Get blue units sensor capabilites. retrieves the default values, then overwrites if there are actual values for this unit in the table
-    let _sensors = Object.assign({}, Sensors["default"]);
-    _sensors = Object.assign(_sensors, Sensors[f.type]);
 
-    // Radius will default to ground range for the blue unit
-    let radius = _sensors.ground;
+    var _sensors = Object.assign({}, _sensors2["default"]["default"]);
 
-    // ..but if enemy is airborne and has its radar on...
+    _sensors = Object.assign(_sensors, _sensors2["default"][f.type]); // Radius will default to ground range for the blue unit
+
+    var radius = _sensors.ground; // ..but if enemy is airborne and has its radar on...
+
     if (enemy.inAir == 1 && f.radarOn == 1) {
       // check if the blue unit is above the enemy - and set range accordingly
       if (enemy.z < f.alt) {
@@ -130,18 +142,13 @@ const CheckObservable = (enemy, friendlyUnits) => {
       } else {
         radius = _sensors.airBelow;
       }
-    }
+    } // Calculate deltas in meters
 
-    // Calculate deltas in meters
-    let dX = (enemy.x - f.lat) * lengths.lat;
-    let dY = (enemy.y - f.lon) * lengths.lon;
-    let dZ = enemy.z - f.alt;
 
-    let distance = Math.sqrt(
-      Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2)
-    );
-
-    //console.log("REDUNIT: "+ enemy.type + " :: Distance to " + f.type + " = " + Math.round(distance) + " meters :: Radius = " + radius+ " meters");
+    var dX = (enemy.x - f.lat) * lengths.lat;
+    var dY = (enemy.y - f.lon) * lengths.lon;
+    var dZ = enemy.z - f.alt;
+    var distance = Math.sqrt(Math.pow(dX, 2) + Math.pow(dY, 2) + Math.pow(dZ, 2)); //console.log("REDUNIT: "+ enemy.type + " :: Distance to " + f.type + " = " + Math.round(distance) + " meters :: Radius = " + radius+ " meters");
     //console.log("Distance in nm, Latitude (X):", dX / 1852 );
     //console.log("Distance in nm, Longitude (Y):", dY / 1852 );
 
@@ -151,25 +158,22 @@ const CheckObservable = (enemy, friendlyUnits) => {
       state.distance = distance;
     }
   });
-
   return state;
 };
-
 /*
   FUNCTION: DataParser() -> Parse the datastream and return a collection of markers as a geoJSON object
 */
-const DataParser = data => {
-  let featureCollection = [];
-  let i = 0;
 
-  let blueforCollection = [];
-  let redforCollection = [];
-  let fadedCollection = [];
 
-  // BLUEFOR Collection
-  data.blue.forEach(element => {
-    let unit = Unit.parse(element);
+var DataParser = function DataParser(data) {
+  var featureCollection = [];
+  var i = 0;
+  var blueforCollection = [];
+  var redforCollection = [];
+  var fadedCollection = []; // BLUEFOR Collection
 
+  data.blue.forEach(function (element) {
+    var unit = Unit.parse(element);
     blueforCollection.push({
       id: unit.id,
       type: unit.type,
@@ -191,26 +195,15 @@ const DataParser = data => {
       distance: null,
       faded: false
     });
-  });
-  //console.log("BLUEFOR: ", bluefor);
-
+  }); //console.log("BLUEFOR: ", bluefor);
   // REDFOR Collection
-  data.red.forEach(element => {
-    let unit = Unit.parse(element);
-    let check = CheckObservable(unit, blueforCollection);
 
-    // Add REDFOR unit to the collection if it is observable
+  data.red.forEach(function (element) {
+    var unit = Unit.parse(element);
+    var check = CheckObservable(unit, blueforCollection); // Add REDFOR unit to the collection if it is observable
+
     if (check.observable === true) {
-      console.log(
-        "REDUNIT: " +
-          unit.type +
-          "\t\t :: Distance to " +
-          check.observer +
-          " = " +
-          Math.round(check.distance) +
-          " meters"
-      );
-
+      console.log("REDUNIT: " + unit.type + "\t\t :: Distance to " + check.observer + " = " + Math.round(check.distance) + " meters");
       redforCollection.push({
         id: unit.id,
         type: unit.type,
@@ -233,17 +226,18 @@ const DataParser = data => {
         faded: false
       });
     }
-  });
-  //console.log("REDFOR: ", redforCollection);
+  }); //console.log("REDFOR: ", redforCollection);
 
-  let _all = blueforCollection.concat(redforCollection);
+  var _all = blueforCollection.concat(redforCollection); //Checks if all previous visible units in the _oldFeatures collection exists in the new _all collection. If one does not, then it should be added to the collection with faded set true
 
-  //Checks if all previous visible units in the _oldFeatures collection exists in the new _all collection. If one does not, then it should be added to the collection with faded set true
-  _oldFeatures.forEach(old => {
-    let addToCollection = true;
-    _all.forEach(unit => {
+
+  _oldFeatures.forEach(function (old) {
+    var addToCollection = true;
+
+    _all.forEach(function (unit) {
       if (old.id === unit.id) addToCollection = false;
     });
+
     if (addToCollection) {
       old.faded = true;
       fadedCollection.push(old);
@@ -253,18 +247,16 @@ const DataParser = data => {
   _all = _all.concat(fadedCollection);
   _oldFeatures = _all;
 
-  _all.forEach(unit => {
+  _all.forEach(function (unit) {
     // Setup a default marker
-    let _sidcObject = Object.assign({}, SIDCtable["default"]);
-    let side = "0";
-    let markerColor = "rgb(252, 246, 127)";
-    if (unit.faded) markerColor = "rgba(252, 246, 127, 0.5)";
+    var _sidcObject = Object.assign({}, _sidc2["default"]["default"]);
 
-    // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
-    if (SIDCtable[unit.type])
-      _sidcObject = Object.assign(_sidcObject, SIDCtable[unit.type]);
+    var side = "0";
+    var markerColor = "rgb(252, 246, 127)";
+    if (unit.faded) markerColor = "rgba(252, 246, 127, 0.5)"; // OPTION: [COMMENT TO TURN OFF] If the unit type is in the list, return an accurate marker
 
-    // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
+    if (_sidc2["default"][unit.type]) _sidcObject = Object.assign(_sidcObject, _sidc2["default"][unit.type]); // OPTION: [COMMENT TO TURN OFF] SHOW AFFILIATION
+
     if (unit.side === 1) {
       side = "1";
       markerColor = "rgb(255, 88, 88)";
@@ -277,27 +269,25 @@ const DataParser = data => {
       markerColor = "rgb(128, 224, 255)";
       if (unit.faded) markerColor = "rgba(128, 224, 255, 0.5)";
       _sidcObject["affiliation"] = "F";
-    }
-
-    // OPTION: [COMMENT TO TURN OFF] HIDE UNIT TYPE/FUNCTION
+    } // OPTION: [COMMENT TO TURN OFF] HIDE UNIT TYPE/FUNCTION
     //_sidcObject["functionID"] = '-----';
-
     // Generate final SIDC string
+
+
     if (unit.faded) _sidcObject["status"] = "A";
-    let _sidc = "";
+    var _sidc = "";
+
     for (var atr in _sidcObject) {
       _sidc += _sidcObject[atr];
-    }
+    } // Add unit to the feature collection
 
-    
 
-    // Add unit to the feature collection
     featureCollection.push({
       id: unit.id,
       type: unit.type,
       lat: unit.lat,
       lon: unit.lon,
-      alt: Utility.metersToFL(unit.z),
+      alt: _utility["default"].metersToFL(unit.z),
       hdg: unit.hdg,
       speed: unit.speed,
       callsign: unit.callsign,
@@ -312,30 +302,32 @@ const DataParser = data => {
     });
   });
 
-  let _package = featureCollection;
+  var _package = featureCollection;
   return _package;
 };
-
 /*
   FUNCTION: ParseAndTransmit() -> Transmits data to all connected clients
 */
-const ParseAndTransmit = data => {
+
+
+var ParseAndTransmit = function ParseAndTransmit(data) {
   console.log("\n");
   console.time("============== Parsed last cycle in");
 
-  let _collection = DataParser(data);
-  for (let connection in wsConnections)
+  var _collection = DataParser(data);
+
+  for (var connection in wsConnections) {
     wsConnections[connection].sendText(JSON.stringify(_collection));
+  }
 
   console.timeEnd("============== Parsed last cycle in");
 };
-
 /*
   Setup of client listener. Then DCSdataStream recieves data from DCS and passes it to the ParseAndTransmit function that parses it and sends it to the clients
 */
-server.listen(_CLIENTS, () => {
-  console.log(
-    `#### NOTIUS-SERVER IS LISTENING FOR CLIENTS ON PORT ${_CLIENTS} ####`
-  );
+
+
+server.listen(_CLIENTS, function () {
+  console.log("#### NOTIUS-SERVER IS LISTENING FOR CLIENTS ON PORT ".concat(_CLIENTS, " ####"));
 });
-DCSdataStream(ParseAndTransmit, _DCS, net);
+(0, _dcsDataStream["default"])(ParseAndTransmit, _DCS, _net["default"]);
